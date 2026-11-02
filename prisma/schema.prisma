@@ -1,0 +1,530 @@
+// Leyp data model. Portable between SQLite (local development) and PostgreSQL
+// (a server): no Prisma enums, no @db.Citext, no native arrays. Enum-shaped
+// columns are String and validated by zod where they are read and written, so
+// the two providers share one schema with no drift.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── Profile ────────────────────────────────────────────────────────────────
+
+model ProfileField {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Skill {
+  id          String            @id @default(cuid())
+  /// Stored lower-cased so "Figma" and "figma" cannot both exist.
+  name        String            @unique
+  sort        Int               @default(0)
+  group       String            @default("")
+  experiences ExperienceSkill[]
+  projects    ProjectSkill[]
+  createdAt   DateTime          @default(now())
+}
+
+model Language {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  /// NATIVE | C2 | C1 | B2 | B1 | A2 | A1
+  level     String
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Experience {
+  id         String            @id @default(cuid())
+  role       String            @default("")
+  company    String            @default("")
+  location   String            @default("")
+  descriptor String            @default("")
+  startYear  Int?
+  startMonth Int?
+  endYear    Int?
+  endMonth   Int?
+  current    Boolean           @default(false)
+  bullets    String            @default("")
+  sort       Int               @default(0)
+  skills     ExperienceSkill[]
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+}
+
+model ExperienceSkill {
+  experienceId String
+  skillId      String
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  skill        Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([experienceId, skillId])
+  @@index([skillId])
+}
+
+model Project {
+  id         String         @id @default(cuid())
+  name       String         @default("")
+  link       String         @default("")
+  startYear  Int?
+  startMonth Int?
+  endYear    Int?
+  endMonth   Int?
+  current    Boolean        @default(false)
+  bullets    String         @default("")
+  sort       Int            @default(0)
+  skills     ProjectSkill[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model ProjectSkill {
+  projectId String
+  skillId   String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, skillId])
+  @@index([skillId])
+}
+
+model Education {
+  id         String   @id @default(cuid())
+  degree     String   @default("")
+  school     String   @default("")
+  startYear  Int?
+  startMonth Int?
+  endYear    Int?
+  endMonth   Int?
+  current    Boolean  @default(false)
+  notes      String   @default("")
+  sort       Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Publication {
+  id        String   @id @default(cuid())
+  citation  String   @default("")
+  link      String   @default("")
+  onResumes Boolean  @default(true)
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Reference {
+  id        String   @id @default(cuid())
+  name      String   @default("")
+  relation  String   @default("")
+  company   String   @default("")
+  email     String   @default("")
+  phone     String   @default("")
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Something the user tells the AI about themselves. Never printed on a document.
+model Fact {
+  id            String       @id @default(cuid())
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  text          String       @default("")
+  sort          Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([applicationId, sort])
+}
+
+// ─── Themes and settings ────────────────────────────────────────────────────
+
+model Theme {
+  id            String     @id @default(cuid())
+  builtIn       Boolean    @default(false)
+  name          String
+  headFont      String
+  bodyFont      String
+  accent        String
+  layout        String     @default("SINGLE")
+  align         String     @default("LEFT")
+  headingStyle  String     @default("PLAIN")
+  density       String     @default("REGULAR")
+  headerStyle   String     @default("PLAIN")
+  sidebarStyle  String     @default("PLAIN")
+  dateStyle     String     @default("INLINE")
+  photoShape    String     @default("CIRCLE")
+  photoPosition String     @default("HEADER_END")
+  documents     Document[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Applications ───────────────────────────────────────────────────────────
+
+model Application {
+  id                  String    @id @default(cuid())
+  /// MANUAL | AGENT
+  origin              String    @default("MANUAL")
+  agentScore          Int?
+  /// An agent draft not yet approved: hidden from every list until it is.
+  awaitingReview      Boolean   @default(false)
+  title               String    @default("")
+  company             String    @default("")
+  role                String    @default("")
+  location            String    @default("")
+  mode                String    @default("")
+  salary              String    @default("")
+  /// Minor units (paise). Null when the text could not be parsed.
+  salaryMin           Int?
+  salaryMax           Int?
+  currency            String    @default("INR")
+  deadline            DateTime?
+  postingUrl          String    @default("")
+  postingText         String    @default("")
+  /// JSON text, validated by zod on read.
+  extracted           String?
+  extractedWith       String?
+  match               String?
+  matchedWith         String?
+  /// DRAFT | SENT | SCREENING | INTERVIEW | OFFER | ACCEPTED | REJECTED | DECLINED
+  status              String    @default("DRAFT")
+  /// SENT | SCREENING | INTERVIEW | OFFER | ACCEPTED; null until first sent.
+  furthestStage       String?
+  sentAt              DateTime?
+  nextInterviewAt     DateTime?
+  tone                String    @default("WARM")
+  language            String    @default("")
+  followThemeLayout   Boolean   @default(false)
+  showPhoto           Boolean?
+  archivedAt          DateTime?
+  emailThreadId       String?
+  interviewEventId    String?
+  interviewCalendarId String?
+  postingId           String?   @unique
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  posting      Posting?       @relation(fields: [postingId], references: [id], onDelete: SetNull)
+  agentDraft   AgentCandidate?
+  startups     Startup[]
+  emails       EmailMessage[]
+  events       StatusEvent[]
+  documents    Document[]
+  messages     ChatMessage[]
+  notes        Note[]
+  facts        Fact[]
+  jobs         Job[]
+
+  @@index([status])
+  @@index([updatedAt])
+  @@index([awaitingReview])
+}
+
+model StatusEvent {
+  id                    String      @id @default(cuid())
+  applicationId         String
+  application           Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  from                  String
+  to                    String
+  at                    DateTime    @default(now())
+  previousFurthestStage String?
+  previousSentAt        DateTime?
+
+  @@index([applicationId, at])
+}
+
+model Document {
+  id            String            @id @default(cuid())
+  applicationId String
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  /// RESUME | COVER_LETTER | EMAIL
+  kind          String
+  /// JSON text: the editable units.
+  units         String
+  themeId       String?
+  theme         Theme?            @relation(fields: [themeId], references: [id], onDelete: SetNull)
+  writtenWith   String?
+  trimmed       String?
+  versions      DocumentVersion[]
+  updatedAt     DateTime          @updatedAt
+
+  @@unique([applicationId, kind])
+}
+
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  units      String
+  /// WRITTEN | TRIMMED | REGENERATED | REFINED | UNDONE | BEFORE_RESTORE | RESTORED
+  cause      String
+  detail     String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([documentId, createdAt])
+}
+
+model ChatMessage {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  /// USER | AI
+  role          String
+  text          String
+  targetUnit    String?
+  /// JSON text: the unit edits this turn made, with the previous text.
+  edits         String?
+  undone        Boolean     @default(false)
+  previousTone  String?
+  writtenWith   String?
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, createdAt])
+}
+
+model Note {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  body          String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now()) @updatedAt
+
+  @@index([applicationId, createdAt])
+}
+
+// ─── Job search ─────────────────────────────────────────────────────────────
+
+model Posting {
+  id            String      @id @default(cuid())
+  /// ADZUNA | JSEARCH | FREEHIRE
+  source        String
+  externalId    String
+  title         String      @default("")
+  company       String      @default("")
+  place         String      @default("")
+  remote        Boolean?
+  salary        String      @default("")
+  salaryMin     Int?
+  salaryMax     Int?
+  currency      String      @default("INR")
+  postedAt      DateTime?
+  url           String      @default("")
+  via           String      @default("")
+  description   String      @default("")
+  complete      Boolean     @default(false)
+  savedAt       DateTime?
+  dismissedAt   DateTime?
+  application   Application?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([source, externalId])
+  @@index([savedAt])
+  @@index([dismissedAt])
+}
+
+model PostingScore {
+  source     String
+  externalId String
+  score      Int
+  /// JSON text: lists of strings.
+  reasons    String
+  redFlags   String
+  scoredWith String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@id([source, externalId])
+}
+
+model PostingSearch {
+  id        String   @id @default(cuid())
+  source    String
+  /// JSON text: the query as asked.
+  query     String
+  /// JSON text: the postings found.
+  postings  String
+  found     Int      @default(0)
+  next      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+// ─── Job agent ──────────────────────────────────────────────────────────────
+
+model AgentCandidate {
+  id            String      @id @default(cuid())
+  source        String
+  externalId    String
+  title         String      @default("")
+  company       String      @default("")
+  place         String      @default("")
+  remote        Boolean?
+  salary        String      @default("")
+  postedAt      DateTime?
+  url           String      @default("")
+  via           String      @default("")
+  description   String      @default("")
+  complete      Boolean     @default(false)
+  score         Int         @default(0)
+  reasons       String?
+  redFlags      String?
+  /// SCORED | DRAFTING | DRAFTED | APPROVED | DISMISSED
+  status        String      @default("SCORED")
+  error         String?
+  applicationId String?     @unique
+  dedupeKey     String      @unique
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  @@unique([source, externalId])
+  @@index([status, score])
+  @@index([createdAt])
+}
+
+// ─── Startups ───────────────────────────────────────────────────────────────
+
+model Startup {
+  id                 String       @id @default(cuid())
+  source             String
+  externalId         String
+  company            String
+  website            String       @default("")
+  summary            String       @default("")
+  details            String       @default("")
+  location           String       @default("")
+  remote             Boolean?
+  stage              String       @default("")
+  /// JSON text
+  roles              String
+  emails             String
+  links              String
+  postedAt           DateTime?
+  score              Int          @default(0)
+  reasons            String
+  scoredWith         String       @default("")
+  /// NEW | SAVED | CONTACTED | DISMISSED
+  status             String       @default("NEW")
+  noApplicationsFrom String       @default("")
+  emailsCheckedAt    DateTime?
+  peopleCheckedAt    DateTime?
+  notes              String       @default("")
+  seenAt             DateTime     @default(now())
+  applicationId      String?      @unique
+  application        Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@unique([source, externalId])
+  @@index([status, score])
+}
+
+model StartupBlock {
+  hash      String   @id
+  createdAt DateTime @default(now())
+}
+
+// ─── Google ─────────────────────────────────────────────────────────────────
+
+model GoogleAccount {
+  id              String    @id @default("google")
+  email           String
+  refreshTokenEnc String
+  scopes          String    @default("")
+  historyId       String?
+  lastSyncAt      DateTime?
+  syncProblem     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model EmailMessage {
+  id              String      @id @default(cuid())
+  gmailId         String      @unique
+  threadId        String
+  applicationId   String?
+  application     Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  /// OUTGOING | INCOMING
+  direction       String
+  fromName        String      @default("")
+  fromAddress     String      @default("")
+  toAddress       String      @default("")
+  subject         String      @default("")
+  messageId       String      @default("")
+  body            String      @default("")
+  sentAt          DateTime
+  /// REJECTION | INTERVIEW | QUESTION | OFFER | ACKNOWLEDGEMENT | OTHER
+  kind            String?
+  summary         String      @default("")
+  questions       String?
+  suggestedStatus String?
+  confirmedAt     DateTime?
+  classifiedWith  String?
+  replyDraft      String      @default("")
+  replyGaps       String?
+  draftedWith     String?
+  handledAt       DateTime?
+  dismissedAt     DateTime?
+  createdAt       DateTime    @default(now())
+
+  @@index([threadId])
+  @@index([applicationId, sentAt])
+  @@index([sentAt])
+}
+
+// ─── Sign-in ────────────────────────────────────────────────────────────────
+
+model LoginThrottle {
+  /// The client IP, or "*" for the global counter.
+  key          String    @id
+  failures     Int       @default(0)
+  windowStart  DateTime
+  blockedUntil DateTime?
+  updatedAt    DateTime  @updatedAt
+
+  @@index([updatedAt])
+}
+
+// ─── Background jobs ────────────────────────────────────────────────────────
+
+model Job {
+  id            String      @id @default(cuid())
+  type          String
+  key           String?
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  /// QUEUED | RUNNING | DONE | FAILED
+  status        String      @default("QUEUED")
+  step          String?
+  /// JSON text
+  input         String
+  result        String?
+  error         String?
+  createdAt     DateTime    @default(now())
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  updatedAt     DateTime    @updatedAt
+
+  @@index([key, createdAt])
+  @@index([status])
+  @@index([applicationId])
+}
