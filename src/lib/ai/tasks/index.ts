@@ -1,7 +1,2 @@
-export {
-  extractPosting,
-  extractedSchema,
-  EXTRACT_POSTING_VERSION,
-  TaskShapeError,
-  type Extracted,
-} from "./extract-posting";
+export * from "./extract-posting";
+export * from "./extract-profile";
