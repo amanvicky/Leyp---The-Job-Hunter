@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { addSkillAction, addExperienceAction, addEducationAction, addLanguageAction } from "@/lib/actions/profile.server";
+import { addSkillAction, addExperienceAction, addEducationAction, addLanguageAction } from "@/lib/actions/profile";
 import { importResumeAction } from "@/lib/actions/import-resume.server";
 
 export function ProfileEditor() {
@@ -23,32 +23,32 @@ export function ProfileEditor() {
 
   async function handleAddSkill() {
     if (!skillName.trim()) return;
-    await addSkillAction({ name: skillName });
+    const result = await addSkillAction({ name: skillName });
     setSkillName("");
-    window.location.reload();
+    if (result.ok) window.location.reload();
   }
 
   async function handleAddExperience() {
     if (!expRole.trim() || !expCompany.trim()) return;
-    await addExperienceAction({ role: expRole, company: expCompany });
+    const result = await addExperienceAction({ role: expRole, company: expCompany });
     setExpRole("");
     setExpCompany("");
-    window.location.reload();
+    if (result.ok) window.location.reload();
   }
 
   async function handleAddEducation() {
     if (!eduDegree.trim() || !eduSchool.trim()) return;
-    await addEducationAction({ degree: eduDegree, school: eduSchool });
+    const result = await addEducationAction({ degree: eduDegree, school: eduSchool });
     setEduDegree("");
     setEduSchool("");
-    window.location.reload();
+    if (result.ok) window.location.reload();
   }
 
   async function handleAddLanguage() {
     if (!langName.trim()) return;
-    await addLanguageAction({ name: langName, level: langLevel as "NATIVE" | "C2" | "C1" | "B2" | "B1" | "A2" | "A1" });
+    const result = await addLanguageAction({ name: langName, level: langLevel as "NATIVE" | "C2" | "C1" | "B2" | "B1" | "A2" | "A1" });
     setLangName("");
-    window.location.reload();
+    if (result.ok) window.location.reload();
   }
 
   return (
