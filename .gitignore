@@ -46,3 +46,12 @@ next-env.d.ts
 *.db
 *.db-journal
 prisma/*.db
+
+# Test databases
+test.db
+test.db-journal
+prisma/test.db
+
+# Runtime logs
+*.log
+srv*.err
