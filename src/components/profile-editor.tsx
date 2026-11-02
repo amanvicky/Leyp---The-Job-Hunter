@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { addSkillAction, addExperienceAction, addEducationAction, addLanguageAction } from "@/lib/actions/profile";
-import { importResumeAction } from "@/lib/actions/import-resume";
+import { addSkillAction, addExperienceAction, addEducationAction, addLanguageAction } from "@/lib/actions/profile.server";
+import { importResumeAction } from "@/lib/actions/import-resume.server";
 
 export function ProfileEditor() {
   const [importText, setImportText] = useState("");

@@ -1,5 +1,12 @@
+"use server";
+
 import { z } from "zod";
 import { serverAction } from "@/lib/action";
+import { upsertProfileField } from "@/lib/profile/entities";
+import { upsertSkill } from "@/lib/profile/skills";
+import { createExperience } from "@/lib/profile/experiences";
+import { createProject } from "@/lib/profile/projects";
+import { createEducation, createLanguage, createFact } from "@/lib/profile/entities";
 
 const basicsSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -14,7 +21,6 @@ const basicsSchema = z.object({
 });
 
 export const saveBasicsAction = serverAction(basicsSchema, async (input) => {
-  const { upsertProfileField } = await import("@/lib/profile/entities");
   for (const [key, value] of Object.entries(input)) {
     if (value !== undefined && value !== null && value !== "") {
       await upsertProfileField(key, String(value));
@@ -26,7 +32,6 @@ export const saveBasicsAction = serverAction(basicsSchema, async (input) => {
 const skillSchema = z.object({ name: z.string().trim().min(1).max(60), group: z.string().trim().max(60).optional() });
 
 export const addSkillAction = serverAction(skillSchema, async (input) => {
-  const { upsertSkill } = await import("@/lib/profile/skills");
   return upsertSkill(input.name, { group: input.group });
 });
 
@@ -45,7 +50,6 @@ const experienceSchema = z.object({
 });
 
 export const addExperienceAction = serverAction(experienceSchema, async (input) => {
-  const { createExperience } = await import("@/lib/profile/experiences");
   return createExperience(input);
 });
 
@@ -62,7 +66,6 @@ const projectSchema = z.object({
 });
 
 export const addProjectAction = serverAction(projectSchema, async (input) => {
-  const { createProject } = await import("@/lib/profile/projects");
   return createProject(input);
 });
 
@@ -78,7 +81,6 @@ const educationSchema = z.object({
 });
 
 export const addEducationAction = serverAction(educationSchema, async (input) => {
-  const { createEducation } = await import("@/lib/profile/entities");
   return createEducation(input);
 });
 
@@ -88,7 +90,6 @@ const languageSchema = z.object({
 });
 
 export const addLanguageAction = serverAction(languageSchema, async (input) => {
-  const { createLanguage } = await import("@/lib/profile/entities");
   return createLanguage(input);
 });
 
@@ -98,6 +99,5 @@ const factSchema = z.object({
 });
 
 export const addFactAction = serverAction(factSchema, async (input) => {
-  const { createFact } = await import("@/lib/profile/entities");
   return createFact(input);
 });

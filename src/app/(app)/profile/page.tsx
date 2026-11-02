@@ -29,6 +29,10 @@ export default async function ProfilePage() {
         Your career history. Strength: {s.score}/100 ({s.label}).
       </p>
 
+      <div style={{ marginBottom: "24px" }}>
+        <a href="/profile/edit" className="button">Edit Profile</a>
+      </div>
+
       <div className="profile-grid">
         <section className="card" aria-labelledby="basics-heading">
           <h2 id="basics-heading">Basics</h2>
