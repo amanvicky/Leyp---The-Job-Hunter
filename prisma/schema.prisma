@@ -519,12 +519,13 @@ model Job {
   input         String
   result        String?
   error         String?
+  attempts      Int         @default(0)
   createdAt     DateTime    @default(now())
   startedAt     DateTime?
   finishedAt    DateTime?
   updatedAt     DateTime    @updatedAt
 
   @@index([key, createdAt])
-  @@index([status])
+  @@index([status, createdAt])
   @@index([applicationId])
 }

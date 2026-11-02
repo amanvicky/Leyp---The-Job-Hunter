@@ -13,16 +13,18 @@ export async function setup(): Promise<void> {
   const root = resolve(import.meta.dirname, "..");
 
   for (const file of ["test.db", "test.db-journal", "test.db-wal", "test.db-shm"]) {
-    const path = resolve(root, "prisma", file);
-    if (existsSync(path)) rmSync(path);
-    const rootPath = resolve(root, file);
-    if (existsSync(rootPath)) rmSync(rootPath);
+    for (const dir of [resolve(root, "prisma"), root]) {
+      const path = resolve(dir, file);
+      if (existsSync(path)) rmSync(path);
+    }
   }
 
-  execFileSync("npx", ["prisma", "migrate", "deploy"], {
+  // Resolve the CLI's entry script rather than going through npx: spawning a
+  // shell to find it would concatenate unescaped arguments.
+  const cli = resolve(root, "node_modules", "prisma", "build", "index.js");
+  execFileSync(process.execPath, [cli, "migrate", "deploy"], {
     cwd: root,
     env: { ...process.env, DATABASE_URL: "file:./test.db" },
     stdio: "pipe",
-    shell: true,
   });
 }
