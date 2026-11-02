@@ -8,7 +8,7 @@ const LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/profile", label: "Profile" },
   { href: "/applications", label: "Applications" },
-  { href: "/settings", label: "Settings" },
+  { href: "/themes", label: "Themes" },
 ];
 
 export function Sidebar() {
