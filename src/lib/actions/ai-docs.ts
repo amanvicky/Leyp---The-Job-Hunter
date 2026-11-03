@@ -8,6 +8,7 @@ import { matchRequirements } from "@/lib/ai/tasks/match-requirements";
 import { tailorResume } from "@/lib/ai/tasks/tailor-resume";
 import { writeCoverLetter } from "@/lib/ai/tasks/write-cover-letter";
 import { refineChat } from "@/lib/ai/tasks/refine-chat";
+import { writeEmail } from "@/lib/ai/tasks/write-email";
 import { buildProfileSummary } from "@/lib/profile/summary";
 import { getApplication } from "@/lib/applications/core";
 import { upsertDocument, saveVersion } from "@/lib/documents/core";
@@ -145,3 +146,21 @@ export const refineChatAction = serverAction(refineSchema, async (input) => {
 
 
 
+
+const writeEmailSchema = z.object({
+  applicationId: z.string().min(1),
+});
+
+export const writeEmailAction = serverAction(writeEmailSchema, async (input) => {
+  const provider = await loadProviderFromSettings();
+  if (!provider) throw new Error("Configure an AI provider in Settings first.");
+
+  const application = await getApplication(input.applicationId);
+  if (!application) throw new Error("Application not found.");
+
+  const profileSummary = (await buildProfileSummary()).slice(0, 600);
+  const result = await writeEmail(provider, { postingText: application.postingText, profileSummary, tone: application.tone });
+
+  await upsertDocument(input.applicationId, "EMAIL", [{ id: "subject", text: result.subject }, { id: "body", text: result.body }]);
+  return result;
+});
