@@ -53,7 +53,7 @@ export default async function ProfilePage() {
           <ul className="tag-list">
             {data.skills.map((skill) => (
               <li key={skill.id}>
-                {skill.name}
+                {skill.label || skill.name}
                 {skill.group ? <span className="muted"> · {skill.group}</span> : null}
               </li>
             ))}

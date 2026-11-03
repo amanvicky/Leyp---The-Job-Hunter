@@ -24,6 +24,8 @@ model Skill {
   id          String            @id @default(cuid())
   /// Stored lower-cased so "Figma" and "figma" cannot both exist.
   name        String            @unique
+  /// Exactly what the user typed: "TypeScript", not "typescript".
+  label       String            @default("")
   sort        Int               @default(0)
   group       String            @default("")
   experiences ExperienceSkill[]

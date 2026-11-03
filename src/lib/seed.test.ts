@@ -7,10 +7,30 @@ beforeEach(async () => {
 });
 
 describe("seed", () => {
-  it("creates the built-in themes", async () => {
+  it("creates the six built-in themes", async () => {
     const themes = await prisma.theme.findMany({ where: { builtIn: true } });
-    expect(themes).toHaveLength(BUILT_IN_THEMES.length);
-    expect(themes.map((theme) => theme.name).sort()).toEqual(["Classic", "Editorial", "Modern"]);
+    expect(themes).toHaveLength(6);
+    expect(themes.map((theme) => theme.name).sort()).toEqual([
+      "Bold",
+      "Classic",
+      "Compact",
+      "Editorial",
+      "Minimal",
+      "Modern",
+    ]);
+  });
+
+  it("covers every layout and every heading style across the built-ins", async () => {
+    const themes = await prisma.theme.findMany({ where: { builtIn: true } });
+    expect(new Set(themes.map((theme) => theme.layout))).toEqual(
+      new Set(["SINGLE", "SIDEBAR_LEFT", "SIDEBAR_RIGHT"]),
+    );
+    expect(new Set(themes.map((theme) => theme.headingStyle))).toEqual(
+      new Set(["PLAIN", "RULE", "SMALL_CAPS", "UPPERCASE"]),
+    );
+    expect(new Set(themes.map((theme) => theme.density))).toEqual(
+      new Set(["COMPACT", "REGULAR", "AIRY"]),
+    );
   });
 
   it("is idempotent", async () => {

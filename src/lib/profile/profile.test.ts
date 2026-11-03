@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { prisma } from "@/lib/prisma";
-import { detachSkillFromExperience, normaliseSkillName, upsertSkill, removeSkill, attachSkillToExperience, listSkills } from "./skills";
+import { detachSkillFromExperience, normaliseSkillName, skillLabel, upsertSkill, removeSkill, attachSkillToExperience, listSkills } from "./skills";
 import { createExperience, listExperiences, reorderExperiences } from "./experiences";
 import { createProject, listProjects } from "./projects";
 import { createEducation, listEducations } from "./entities";
@@ -25,6 +25,25 @@ describe("profile", () => {
       const second = await upsertSkill("  python  ");
       expect(second.id).toBe(first.id);
       expect(await prisma.skill.count()).toBe(1);
+    });
+
+    it("keeps the spelling the user typed as the label", async () => {
+      const skill = await upsertSkill("TypeScript");
+      expect(skill.name).toBe("typescript");
+      expect(skill.label).toBe("TypeScript");
+      expect(skillLabel(skill)).toBe("TypeScript");
+    });
+
+    it("never lets a later spelling downgrade the first one", async () => {
+      await upsertSkill("TypeScript");
+      const again = await upsertSkill("  typescript ");
+      expect(again.label).toBe("TypeScript");
+      expect(await prisma.skill.count()).toBe(1);
+    });
+
+    it("prints the stored name when a row has no label", () => {
+      expect(skillLabel({ name: "go" })).toBe("go");
+      expect(skillLabel({ name: "go", label: "  " })).toBe("go");
     });
 
     it("links skills to an experience", async () => {
