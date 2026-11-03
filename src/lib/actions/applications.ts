@@ -1,3 +1,5 @@
+"use server";
+
 import { prisma } from "@/lib/prisma";
 import { serverAction } from "@/lib/action";
 import { z } from "zod";

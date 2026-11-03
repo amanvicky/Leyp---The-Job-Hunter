@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { addSkillAction, addExperienceAction, addEducationAction, addLanguageAction } from "@/lib/actions/profile";
-import { importResumeAction } from "@/lib/actions/import-resume.server";
+import { addSkillAction, addExperienceAction, addEducationAction, addLanguageAction, addProjectAction } from "@/lib/actions/profile";
+import { importResumeAction } from "@/lib/actions/import-resume";
 
 export function ProfileEditor() {
   const [importText, setImportText] = useState("");
@@ -14,6 +14,8 @@ export function ProfileEditor() {
   const [eduSchool, setEduSchool] = useState("");
   const [langName, setLangName] = useState("");
   const [langLevel, setLangLevel] = useState("B2");
+  const [name, setName] = useState("");
+  const [link, setLink] = useState("");
 
   async function handleImport() {
     const result = await importResumeAction({ text: importText });
@@ -48,6 +50,14 @@ export function ProfileEditor() {
     if (!langName.trim()) return;
     const result = await addLanguageAction({ name: langName, level: langLevel as "NATIVE" | "C2" | "C1" | "B2" | "B1" | "A2" | "A1" });
     setLangName("");
+    if (result.ok) window.location.reload();
+  }
+
+  async function handleAddProject() {
+    if (!name.trim()) return;
+    const result = await addProjectAction({ name, link });
+    setName("");
+    setLink("");
     if (result.ok) window.location.reload();
   }
 
@@ -108,6 +118,15 @@ export function ProfileEditor() {
             <option value="A1">A1</option>
           </select>
           <button type="button" onClick={handleAddLanguage} className="button">Add</button>
+        </div>
+      </section>
+
+      <section className="card">
+        <h2>Add project</h2>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Project name" />
+          <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Link (optional)" />
+          <button type="button" onClick={handleAddProject} className="button">Add</button>
         </div>
       </section>
     </div>

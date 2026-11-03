@@ -2,6 +2,7 @@ import { verifySession } from "@/lib/auth/session";
 import { getProfilePageData } from "@/lib/actions/profile-page";
 import { getProfileStrengthAction } from "@/lib/actions/profile-strength";
 import { ProfileEditor } from "@/components/profile-editor";
+import { ProjectEditor } from "@/components/project-editor";
 
 export const metadata = { title: "Edit Profile · Leyp" };
 
@@ -30,6 +31,7 @@ export default async function ProfileEditPage() {
       </p>
 
       <ProfileEditor />
+      <ProjectEditor />
 
       <hr style={{ margin: "32px 0", borderColor: "var(--line)" }} />
 
