@@ -1,15 +1,30 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { readFileSync } from "node:fs";
 
 /**
- * A fresh CSP nonce per request. Scripts run only with the nonce, nothing loads
- * from another host, and no other site may frame the app.
+ * A CSP nonce. It must be stable for the lifetime of a server process: a
+ * per-request nonce would be regenerated on every navigation and the scripts
+ * tagged with the previous nonce would be blocked by the new policy. Deriving
+ * it from the build id keeps one value for the whole deployment.
+ */
+const NONCE = Buffer.from(
+  (() => {
+    try {
+      return readFileSync(process.cwd() + "/.next/BUILD_ID", "utf8").trim();
+    } catch {
+      return crypto.randomUUID();
+    }
+  })(),
+).toString("base64");
+
+/**
+ * Security headers on every HTML response. Scripts run only with the nonce,
+ * nothing loads from another host, and no other site may frame the app.
  */
 export function proxy(request: NextRequest): NextResponse {
-  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `script-src 'self' 'nonce-${NONCE}' 'strict-dynamic'`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self'",
@@ -21,7 +36,7 @@ export function proxy(request: NextRequest): NextResponse {
   ].join("; ");
 
   const headers = new Headers(request.headers);
-  headers.set("x-nonce", nonce);
+  headers.set("x-nonce", NONCE);
 
   const response = NextResponse.next({ request: { headers } });
   response.headers.set("content-security-policy", csp);
