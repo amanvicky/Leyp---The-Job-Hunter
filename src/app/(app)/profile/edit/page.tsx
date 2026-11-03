@@ -26,102 +26,48 @@ export default async function ProfileEditPage() {
     <div className="page">
       <h1>Edit Profile</h1>
       <p className="muted">
-        Strength: {s.score}/100 ({s.label}).
+        Strength: {s.score}/100 ({s.label}). Everything here stays on this machine.
       </p>
 
-      <ProfileEditor />
+      <ProfileEditor
+        data={{
+          fields: data.fields,
+          skills: data.skills.map((skill) => ({
+            id: skill.id,
+            name: skill.name,
+            label: skill.label,
+            group: skill.group,
+          })),
+          experiences: data.experiences.map((experience) => ({
+            id: experience.id,
+            role: experience.role,
+            company: experience.company,
+          })),
+          projects: data.projects.map((project) => ({ id: project.id, name: project.name })),
+          educations: data.educations.map((education) => ({
+            id: education.id,
+            degree: education.degree,
+            school: education.school,
+          })),
+          languages: data.languages.map((language) => ({
+            id: language.id,
+            name: language.name,
+            level: language.level,
+          })),
+          publications: data.publications.map((publication) => ({
+            id: publication.id,
+            citation: publication.citation,
+          })),
+          references: data.references.map((reference) => ({ id: reference.id, name: reference.name })),
+          facts: data.facts.map((fact) => ({ id: fact.id, text: fact.text })),
+        }}
+      />
 
-      <hr style={{ margin: "32px 0", borderColor: "var(--line)" }} />
-
-      <h2>Current Data</h2>
-      <div className="profile-grid">
-        <section className="card" aria-labelledby="basics-heading">
-          <h2 id="basics-heading">Basics</h2>
-          <dl>
-            <dt>Name</dt>
-            <dd>{data.fields.name || "—"}</dd>
-            <dt>Email</dt>
-            <dd>{data.fields.email || "—"}</dd>
-            <dt>Headline</dt>
-            <dd>{data.fields.headline || "—"}</dd>
-            <dt>Location</dt>
-            <dd>{data.fields.location || "—"}</dd>
-          </dl>
-        </section>
-
-        <section className="card" aria-labelledby="skills-heading">
-          <h2 id="skills-heading">Skills ({data.skills.length})</h2>
-          <ul className="tag-list">
-            {data.skills.map((skill) => (
-              <li key={skill.id}>
-                {skill.label || skill.name}
-                {skill.group ? <span className="muted"> · {skill.group}</span> : null}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="card" aria-labelledby="experience-heading">
-          <h2 id="experience-heading">Experience ({data.experiences.length})</h2>
-          {data.experiences.length === 0 ? (
-            <p className="muted">No roles yet.</p>
-          ) : (
-            <ul>
-              {data.experiences.map((exp) => (
-                <li key={exp.id}>
-                  <strong>{exp.role || "Untitled role"}</strong>
-                  {exp.company ? ` · ${exp.company}` : ""}
-                  {exp.startYear ? ` · ${exp.startYear}` : ""}
-                  {exp.current ? " – Present" : exp.endYear ? ` – ${exp.endYear}` : ""}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="card" aria-labelledby="education-heading">
-          <h2 id="education-heading">Education ({data.educations.length})</h2>
-          {data.educations.length === 0 ? (
-            <p className="muted">No education entries yet.</p>
-          ) : (
-            <ul>
-              {data.educations.map((edu) => (
-                <li key={edu.id}>
-                  {edu.degree || "Degree"} · {edu.school || "School"}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="card" aria-labelledby="projects-heading">
-          <h2 id="projects-heading">Projects ({data.projects.length})</h2>
-          {data.projects.length === 0 ? (
-            <p className="muted">No projects yet.</p>
-          ) : (
-            <ul>
-              {data.projects.map((proj) => (
-                <li key={proj.id}>{proj.name || "Unnamed project"}</li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="card" aria-labelledby="languages-heading">
-          <h2 id="languages-heading">Languages ({data.languages.length})</h2>
-          {data.languages.length === 0 ? (
-            <p className="muted">No languages yet.</p>
-          ) : (
-            <ul>
-              {data.languages.map((lang) => (
-                <li key={lang.id}>
-                  {lang.name} · {lang.level}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+      <p style={{ marginTop: "24px" }}>
+        <a href="/resume" className="button">
+          Preview and download the resume
+        </a>
+      </p>
     </div>
   );
 }
