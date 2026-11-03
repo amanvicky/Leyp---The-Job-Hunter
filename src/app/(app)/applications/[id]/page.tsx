@@ -2,8 +2,9 @@ import { verifySession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { getApplicationAction } from "@/lib/actions/applications";
 import { transitionApplicationAction, archiveApplicationAction, unarchiveApplicationAction, addNoteAction } from "@/lib/actions/applications";
+import { ApplicationActions } from "@/components/application-actions";
 
-export const metadata = { title: "Application · Leyp" };
+export const metadata = { title: "Application - Leyp" };
 
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await verifySession();
@@ -24,18 +25,20 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
 
   return (
     <div className="page">
-      <p><a href="/applications">← Applications</a></p>
+      <p><a href="/applications">? Applications</a></p>
       <h1>{app.title || "Untitled role"}</h1>
-      <p className="muted">{app.company || "Unknown company"} · {app.status}</p>
+      <p className="muted">{app.company || "Unknown company"} - {app.status}</p>
+
+      <ApplicationActions applicationId={id} />
 
       <section className="card" style={{ marginTop: "16px" }}>
         <h2>Details</h2>
         <dl>
-          <dt>Role</dt><dd>{app.role || "—"}</dd>
-          <dt>Location</dt><dd>{app.location || "—"}</dd>
-          <dt>Salary</dt><dd>{app.salary || "—"} {app.currency}</dd>
+          <dt>Role</dt><dd>{app.role || "-"}</dd>
+          <dt>Location</dt><dd>{app.location || "-"}</dd>
+          <dt>Salary</dt><dd>{app.salary || "-"} {app.currency}</dd>
           <dt>Tone</dt><dd>{app.tone}</dd>
-          <dt>Posting URL</dt><dd>{app.postingUrl ? <a href={app.postingUrl} target="_blank" rel="noreferrer">{app.postingUrl}</a> : "—"}</dd>
+          <dt>Posting URL</dt><dd>{app.postingUrl ? <a href={app.postingUrl} target="_blank" rel="noreferrer">{app.postingUrl}</a> : "-"}</dd>
           <dt>Created</dt><dd>{new Date(app.createdAt).toLocaleString()}</dd>
           <dt>Updated</dt><dd>{new Date(app.updatedAt).toLocaleString()}</dd>
         </dl>
@@ -83,7 +86,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
         <h2>Notes ({app.notes.length})</h2>
         <ul>
           {app.notes.map((note) => (
-            <li key={note.id}>{note.body} <span className="muted">· {new Date(note.createdAt).toLocaleString()}</span></li>
+            <li key={note.id}>{note.body} <span className="muted">- {new Date(note.createdAt).toLocaleString()}</span></li>
           ))}
         </ul>
         <form action={async (formData: FormData) => {
@@ -99,11 +102,11 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       <section className="card" style={{ marginTop: "16px" }}>
         <h2>Documents</h2>
         {app.documents.length === 0 ? (
-          <p className="muted">No documents yet.</p>
+          <p className="muted">No documents yet. Use the AI actions above.</p>
         ) : (
           <ul>
             {app.documents.map((doc) => (
-              <li key={doc.id}>{doc.kind} · updated {new Date(doc.updatedAt).toLocaleString()}</li>
+              <li key={doc.id}>{doc.kind} - {doc.units.length} units - updated {new Date(doc.updatedAt).toLocaleString()}</li>
             ))}
           </ul>
         )}
