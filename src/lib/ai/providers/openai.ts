@@ -12,7 +12,10 @@ export function openAiProvider(config: ProviderConfig, deps: ProviderDeps): Prov
   const label = server?.name ?? "The model";
 
   async function once(request: ChatRequest): Promise<Response> {
-    const system = request.system;
+    const system =
+      putSchemaInPrompt && request.schema
+        ? `${request.system}\n\nAnswer with JSON matching this schema:\n${JSON.stringify(request.schema)}`
+        : request.system;
 
     return deps.fetchImpl(address, {
       method: "POST",
@@ -28,8 +31,8 @@ export function openAiProvider(config: ProviderConfig, deps: ProviderDeps): Prov
           { role: "user", content: request.user },
         ],
         max_tokens: request.maxTokens ?? 2048,
-        ...(request.schema
-          ? { response_format: { type: "json_object" } }
+        ...(request.schema && !putSchemaInPrompt
+          ? { response_format: { type: "json_schema", json_schema: request.schema } }
           : {}),
         ...(server?.chat ?? {}),
       }),
@@ -66,6 +69,3 @@ export function openAiProvider(config: ProviderConfig, deps: ProviderDeps): Prov
     },
   };
 }
-
-
-

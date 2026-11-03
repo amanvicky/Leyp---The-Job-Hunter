@@ -69,3 +69,4 @@ export function apiAddress(baseURL: string): string {
 export function ignoresSchemas(baseURL: string, model: string): boolean {
   return serverAt(baseURL)?.ignoresSchemas === true || model.endsWith("-cloud");
 }
+
