@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getApplicationAction } from "@/lib/actions/applications";
 import { transitionApplicationAction, archiveApplicationAction, unarchiveApplicationAction, addNoteAction } from "@/lib/actions/applications";
 import { ApplicationActions } from "@/components/application-actions";
+import { RefineChat } from "@/components/refine-chat";
 
 export const metadata = { title: "Application - Leyp" };
 
@@ -29,7 +30,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       <h1>{app.title || "Untitled role"}</h1>
       <p className="muted">{app.company || "Unknown company"} - {app.status}</p>
 
-      <ApplicationActions applicationId={id} />
+      <ApplicationActions applicationId={id} />\n\n      {app.documents.some((d: { kind: string }) => d.kind === "RESUME") ? <RefineChat applicationId={id} documentKind="RESUME" /> : null}\n      {app.documents.some((d: { kind: string }) => d.kind === "COVER_LETTER") ? <RefineChat applicationId={id} documentKind="COVER_LETTER" /> : null}
 
       <section className="card" style={{ marginTop: "16px" }}>
         <h2>Details</h2>
@@ -124,3 +125,4 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     </div>
   );
 }
+

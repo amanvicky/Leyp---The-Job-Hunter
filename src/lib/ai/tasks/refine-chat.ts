@@ -41,11 +41,22 @@ export async function refineChat(
     return { edits: [], reply: answer.trim() };
   }
   const result = refineChatSchema.safeParse(parsed);
-  if (!result.success) return { edits: [], reply: answer.trim() };
-  return result.data;
+  if (result.success) return result.data;
+  // Lenient: model may use "unit" instead of "unitId".
+  const obj = parsed as { edits?: unknown[]; reply?: string };
+  if (Array.isArray(obj?.edits)) {
+    const edits = obj.edits.map((e: any) => ({
+      unitId: e.unitId ?? e.unit ?? e.id,
+      previousText: e.previousText ?? e.old ?? e.before ?? "",
+      newText: e.newText ?? e.new ?? e.after ?? "",
+    })).filter((e: any) => e.unitId && e.newText);
+    return { edits, reply: typeof obj.reply === "string" ? obj.reply : answer.trim() };
+  }
+  return { edits: [], reply: answer.trim() };
 }
 
 function stripFence(text: string): string {
   const fenced = /```(?:json)?\s*([\s\S]*?)```/.exec(text);
   return (fenced?.[1] ?? text).trim();
 }
+
