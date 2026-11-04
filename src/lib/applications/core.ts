@@ -13,6 +13,9 @@ export async function createApplication(input: {
   postingText?: string;
   tone?: string;
   language?: string;
+  /** MANUAL for a posting you pasted; AGENT for one the scan surfaced. */
+  origin?: "MANUAL" | "AGENT";
+  agentScore?: number | null;
 }) {
   return prisma.application.create({
     data: {
@@ -28,7 +31,8 @@ export async function createApplication(input: {
       postingText: input.postingText ?? "",
       tone: input.tone ?? "WARM",
       language: input.language ?? "",
-      origin: "MANUAL",
+      origin: input.origin ?? "MANUAL",
+      agentScore: input.agentScore ?? null,
       status: "DRAFT",
     },
   });

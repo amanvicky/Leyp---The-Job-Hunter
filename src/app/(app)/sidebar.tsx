@@ -8,7 +8,13 @@ const LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/profile", label: "Profile" },
   { href: "/applications", label: "Applications" },
+  { href: "/jobs", label: "Find jobs" },
+  { href: "/agent", label: "Agent" },
+  { href: "/inbox", label: "Inbox" },
+  { href: "/startups", label: "Startups" },
   { href: "/resume", label: "Resume" },
+  { href: "/themes", label: "Themes" },
+  { href: "/settings", label: "Settings" },
 ];
 
 export function Sidebar() {
