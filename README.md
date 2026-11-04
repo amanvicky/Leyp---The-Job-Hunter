@@ -1,30 +1,62 @@
 # Leyp — The Job Hunter
 
-A self-hosted job-search application for one person. Keep your career history in one profile; for every job you apply to, Leyp reads the posting, shows how you match, drafts a tailored resume and cover letter using only facts from your profile, and tracks the application from draft to offer.
-
-Runs on localhost, stores everything in a local PostgreSQL database, and talks to an AI model of your choosing — a local one through Ollama, or any hosted provider.
-
-## The one rule
-
-**A human approves every send.** Leyp never sends an application, an email, or a reply on its own. It prepares; you decide.
-
-This is enforced structurally, not by convention: agent-prepared drafts stay hidden from every screen until approved, and there is no code path from a scheduled job to a sent email.
-
-## Documentation
-
-| Document | What it is |
-|---|---|
-| [Design specification](docs/superpowers/specs/2026-11-02-leyp-design.md) | The full product and architecture spec — decisions, data model, AI layer, security, six phases |
-| [Phase 1 plan](docs/superpowers/plans/2026-11-02-leyp-phase-1.md) | The walking skeleton, task by task, with tests and commands |
-
-## Status
-
-Design complete. Implementation not started.
+A self-hosted, single-user, human-in-the-loop job-search application. Core rule: **the human approves every send.**
 
 ## Stack
 
-Next.js 16 · React 19 · TypeScript · Prisma 7 · PostgreSQL 18 · Tailwind 4 · Vitest · Playwright
+- Next.js 16 (App Router) + React 19 + TypeScript (strict)
+- Prisma 7 + better-sqlite3 (SQLite; Postgres later)
+- zod, `@node-rs/argon2`, `jose` (JWE sessions)
+- Vitest (unit + DB + contract), Playwright (E2E)
+- AI: OpenAI, Anthropic, Mistral, Ollama (local)
+
+## Features
+
+- **Profile & resume** — 9 profile models, 6 themes, PDF export, resume import
+- **Applications** — paste a posting → extracted requirements → match report → tailored resume + cover letter → refine chat with undo → version history
+- **AI tasks** — match-requirements, tailor-resume, write-cover-letter, write-email, refine-chat, score-posting, classify-reply, draft-reply
+- **Job search** — Adzuna, JSearch, FreeHire adapters with 30-min caching and quota-aware failures
+- **Agent** — nightly scan scores postings, surfaces candidates for approve/dismiss
+- **Inbox** — Gmail sync, reply classification, draft replies with flagged gaps
+- **Startups** — startup list with roles and published addresses
+- **Google** — OAuth, encrypted token storage, Calendar free/busy + interview events
+
+## Running
+
+```bash
+cp .env.example .env.local  # or create manually
+# Required: APP_PASSWORD (argon2id hash), APP_SECRET (>=32 chars), DATABASE_URL
+npm install
+npx prisma migrate deploy
+npm run seed
+npm run dev
+```
+
+Dev server: http://localhost:3000
+
+## Testing
+
+```bash
+npm test          # Vitest (unit + DB + contract)
+npm run test:e2e  # Playwright
+npm run typecheck # tsc --noEmit
+npm run build     # next build --webpack
+```
+
+## Environment
+
+| Variable | Required | Description |
+|---|---|---|
+| `APP_PASSWORD` | Yes | argon2id hash of your password |
+| `APP_SECRET` | Yes | >=32 chars, used for HKDF key derivation |
+| `DATABASE_URL` | Yes | `file:./dev.db` for SQLite |
+| `TEST_DATABASE_URL` | No | `file:./test.db` (must end in `_test`) |
+| `AI_TIMEOUT_SECONDS` | No | Override AI timeout |
+
+## Design
+
+See `docs/superpowers/specs/2026-11-02-leyp-design.md` for the full spec (12 sections, 6 phases).
 
 ## License
 
-Not yet chosen.
+Private. All rights reserved.
