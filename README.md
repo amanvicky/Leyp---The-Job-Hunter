@@ -1,5 +1,7 @@
 # Leyp — The Job Hunter
 
+[![CI](https://github.com/amanvicky/leyp/actions/workflows/ci.yml/badge.svg)](https://github.com/amanvicky/leyp/actions/workflows/ci.yml)
+
 A self-hosted, single-user, human-in-the-loop job-search application. Core rule: **the human approves every send.**
 
 ## Stack
